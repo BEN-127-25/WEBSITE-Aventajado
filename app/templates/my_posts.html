@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="fw-bold">My Job Posts</h2>
+      <a href="{{ url_for('jobs.create_post') }}" class="btn btn-primary px-4">
+          <i class="bi bi-plus-circle me-2"></i>Create New Job Post
+      </a>
+  </div>
+
+  {% if jobs %}
+    <div class="row g-4">
+      {% for job in jobs %}
+      <div class="col-md-6 col-lg-4">
+        <div class="card job-card shadow-sm border-0 p-3 h-100">
+
+            <h4 class="fw-bold">{{ job.title }}</h4>
+            <p class="text-muted mb-1"><i class="bi bi-building me-1"></i>{{ job.company }}</p>
+
+            <div class="d-flex align-items-center mb-2">
+                {% if job.user.profile_picture %}
+                <img src="{{ url_for('static', filename='profile_pics/' ~ job.user.profile_picture) }}"
+                    class="rounded-circle me-2" width="32" height="32">
+                {% else %}
+                <i class="bi bi-person-circle text-primary me-2" style="font-size: 1.6rem;"></i>
+                {% endif %}
+                <div>
+                    <span class="fw-semibold">{{ job.user.username }}</span><br>
+                    <small class="badge bg-secondary">{{ job.user.role }}</small>
+                </div>
+            </div>
+
+            {% if job.experience_required %}
+            <p class="mb-1">
+              <i class="bi bi-briefcase me-1"></i>
+              Experience: {{ job.experience_required }}
+            </p>
+            {% endif %}
+
+            {% if job.degree_required %}
+            <p class="mb-1">
+              <i class="bi bi-mortarboard me-1"></i>
+              Degree: {{ job.degree_required }}
+            </p>
+            {% endif %}
+
+            <p class="text-secondary mt-2 small">
+              {{ job.description[:120] }}...
+            </p>
+
+            <div class="mb-3">
+                {% if job.status == 'open' %}
+                    <span class="badge bg-success">Open</span>
+                {% elif job.status == 'pending' %}
+                    <span class="badge bg-warning text-dark">Pending Applicants</span>
+                {% elif job.status == 'taken' %}
+                    <span class="badge bg-danger">Taken</span>
+                {% endif %}
+            </div>
+
+            <div class="mt-auto pt-3 d-flex flex-column gap-2">
+
+                <a href="{{ url_for('jobs.view_post', job_id=job.id) }}" 
+                    class="btn btn-info btn-sm w-100">
+                    <i class="bi bi-eye me-1"></i> View
+                </a>
+
+                {% if current_user.role in ['employer', 'admin'] %}
+                <button class="btn btn-secondary btn-sm w-100" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#applicants{{ job.id }}">
+                    <i class="bi bi-people-fill me-1"></i> View Applicants
+                </button>
+                {% endif %}
+
+                <div class="collapse mt-2" id="applicants{{ job.id }}">
+                    {% if job.applications|length > 0 %}
+                        <div class="card card-body small">
+
+                            {% for app in job.applications %}
+                                <div class="border-bottom pb-2 mb-2">
+
+                                    <strong>{{ app.user.username }}</strong><br>
+                                    <span class="text-muted">Experience: {{ app.experience }}</span><br>
+
+                                    {% if app.resume_file %}
+                                    <a href="{{ url_for('jobs.view_resume', application_id=app.id) }}" 
+                                        class="text-primary fw-bold" target="_blank">
+                                        <i class="bi bi-file-earmark-pdf"></i> View Resume
+                                    </a><br>
+                                    {% endif %}
+
+                                    <form method="POST" 
+                                          action="{{ url_for('jobs.update_application_status', app_id=app.id) }}"
+                                          class="mt-2">
+
+                                        <select name="status" class="form-select form-select-sm">
+                                            <option value="pending" {% if app.status == 'pending' %}selected{% endif %}>
+                                                Pending
+                                            </option>
+                                            <option value="approved" {% if app.status == 'approved' %}selected{% endif %}>
+                                                Approved
+                                            </option>
+                                            <option value="taken" {% if app.status == 'taken' %}selected{% endif %}>
+                                                Mark as Taken
+                                            </option>
+                                        </select>
+
+                                        <button class="btn btn-sm btn-primary mt-2 w-100">Update</button>
+                                    </form>
+
+                                </div>
+                            {% endfor %}
+
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center small">No applicants yet.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="alert alert-info text-center" role="alert">
+      You haven't posted any jobs yet. Click "Create New Job Post" to get started!
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

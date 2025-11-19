@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container admin-page mt-5">
+
+    <!-- PAGE TITLE -->
+    <div class="text-center mb-4">
+        <h2 class="fw-bold admin-title">
+            <i class="bi bi-people-fill me-2"></i> Manage Users
+        </h2>
+        <p class="text-muted">Approve, reject, or monitor registered users.</p>
+    </div>
+
+    <!-- LINK TO JOB POSTS -->
+    <div class="text-center mb-4">
+        <a href="{{ url_for('admin.job_posts') }}" class="btn btn-primary px-4">
+            <i class="bi bi-briefcase-fill me-1"></i> View Job Posts
+        </a>
+    </div>
+
+    <!-- USERS TABLE -->
+    <div class="table-responsive shadow-sm">
+        <table class="table table-hover table-bordered text-center align-middle admin-table">
+
+            <thead class="table-dark">
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.id }}</td>
+                    <td class="fw-semibold">{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.role }}</td>
+
+                    <td>
+                        {% if user.status == 'pending' %}
+                            <span class="badge bg-warning text-dark px-3 py-2">Pending</span>
+                        {% elif user.status == 'approved' %}
+                            <span class="badge bg-success px-3 py-2">Approved</span>
+                        {% elif user.status == 'rejected' %}
+                            <span class="badge bg-danger px-3 py-2">Rejected</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <form method="POST"
+                              action="{{ url_for('admin.update_user_status', user_id=user.id) }}"
+                              class="d-flex justify-content-center gap-2">
+
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                            <button type="submit"
+                                    name="action"
+                                    value="approve"
+                                    class="btn btn-success btn-sm px-3"
+                                    {% if user.status == 'approved' %}disabled{% endif %}>
+                                Approve
+                            </button>
+
+                            <button type="submit"
+                                    name="action"
+                                    value="reject"
+                                    class="btn btn-danger btn-sm px-3"
+                                    {% if user.status == 'rejected' %}disabled{% endif %}>
+                                Reject
+                            </button>
+
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

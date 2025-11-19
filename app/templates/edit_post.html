@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="content-wrapper">
+    <div class="container">
+        <div class="card p-4 shadow-sm edit-card">
+
+            <h3 class="fw-bold mb-4 text-center">Edit Post</h3>
+
+            <form method="POST" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+
+                <!-- Job Title -->
+                <div class="mb-3">
+                    {{ form.job_title.label(class="form-label fw-semibold") }}
+                    {{ form.job_title(class="form-control", placeholder="Enter job title") }}
+                    {% if form.job_title.errors %}
+                        <small class="text-danger">{{ form.job_title.errors[0] }}</small>
+                    {% endif %}
+                </div>
+
+                {% if job.role == "employer" %}
+                <!-- Employer: Company Name -->
+                <div class="mb-3">
+                    {{ form.company_name.label(class="form-label fw-semibold") }}
+                    {{ form.company_name(class="form-control", placeholder="Enter company name") }}
+                    {% if form.company_name.errors %}
+                        <small class="text-danger">{{ form.company_name.errors[0] }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Experience / Description -->
+                <div class="mb-3">
+                    {{ form.experience.label(class="form-label fw-semibold") }}
+                    {{ form.experience(class="form-control", rows=4, placeholder="Describe the job or your experience") }}
+                    {% if form.experience.errors %}
+                        <small class="text-danger">{{ form.experience.errors[0] }}</small>
+                    {% endif %}
+                </div>
+
+                {% if job.role == "applicant" %}
+                <!-- Resume upload -->
+                <div class="mb-3">
+                    {{ form.resume_file.label(class="form-label fw-semibold") }}
+                    {{ form.resume_file(class="form-control") }}
+                    {% if job.resume_file %}
+                        <small class="text-muted d-block mt-1">
+                            Current Resume: <strong>{{ job.resume_file }}</strong>
+                        </small>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('jobs.my_posts') if current_user.role=='employer' else url_for('jobs.posts') }}"
+                       class="btn btn-outline-secondary">
+                        ← Cancel
+                    </a>
+
+                    <button type="submit" class="btn btn-primary px-4">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

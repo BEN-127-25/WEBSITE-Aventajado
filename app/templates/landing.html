@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="landing-hero">
+    <h1 class="hero-title">Find Jobs. <span>Hire Talent.</span> Faster.</h1>
+    <p class="hero-subtitle">Your trusted platform connecting applicants and employers seamlessly.</p>
+
+    <div class="hero-buttons">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-light btn-lg btn-glow">Get Started</a>
+        <a href="#features" class="btn btn-outline-light btn-lg btn-glow">Learn More</a>
+    </div>
+</div>
+
+
+<!-- FEATURES -->
+<section id="features" class="features-section container mt-5">
+    <h2 class="text-center fw-bold mb-4">Why Choose HireHub?</h2>
+
+    <div class="features">
+
+        <div class="feature-card">
+            <i class="fas fa-briefcase feature-icon"></i>
+            <h4>Smart Job Posting</h4>
+            <p>Create, manage, and promote job listings easily.</p>
+        </div>
+
+        <div class="feature-card">
+            <i class="fas fa-users feature-icon"></i>
+            <h4>Verified Applicants</h4>
+            <p>Profiles with complete background details.</p>
+        </div>
+
+        <div class="feature-card">
+            <i class="fas fa-bolt feature-icon"></i>
+            <h4>Fast Matching</h4>
+            <p>Instant candidate & employer matching.</p>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- TESTIMONIALS -->
+<section class="testimonials-section mt-5">
+    <h2 class="text-center fw-bold mb-4">What Our Users Say</h2>
+
+    <div class="container d-flex justify-content-center flex-wrap">
+
+        <div class="testimonial-card">
+            <p>"HireHub helped me land my dream job in just 3 days!"</p>
+            <div class="testimonial-name">— Maria S.</div>
+        </div>
+
+        <div class="testimonial-card">
+            <p>"Perfect platform for finding reliable workers for my business."</p>
+            <div class="testimonial-name">— Robert K.</div>
+        </div>
+
+        <div class="testimonial-card">
+            <p>"User-friendly and fast. Highly recommended."</p>
+            <div class="testimonial-name">— Janella P.</div>
+        </div>
+
+    </div>
+</section>
+
+
+<!-- FOOTER -->
+<div class="footer-section mt-5">
+    <h4>HireHub</h4>
+    <div class="footer-links">
+        <a href="#">About</a>
+        <a href="#">Privacy</a>
+        <a href="#">Support</a>
+    </div>
+    <div class="footer-copy">
+        © 2025 HireHub. All rights reserved.
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="dashboard-container">
+
+    <!-- Page Title -->
+    <h2 class="dashboard-title">Welcome back, <span class="username-highlight">{{ current_user.username }}</span>!</h2>
+    <p class="dashboard-subtitle">What would you like to do today?</p>
+
+    <!-- Card Grid -->
+    <div class="row g-4 mt-3">
+
+        <!-- Jobs Card -->
+        <div class="col-md-6">
+            <div class="dash-card shadow-sm">
+                <div class="dash-card-body">
+                    <h4 class="dash-card-title">Available Jobs</h4>
+                    <p class="dash-card-text">Explore job listings and apply with one click.</p>
+                    <a href="{{ url_for('auth.jobs') }}" class="btn btn-primary dash-btn">
+                        Browse Jobs
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="col-md-6">
+            <div class="dash-card shadow-sm">
+                <div class="dash-card-body">
+                    <h4 class="dash-card-title">My Profile</h4>
+                    <p class="dash-card-text">Update your details or upload your resume.</p>
+                    <a href="{{ url_for('main.profile') }}" class="btn btn-outline-secondary dash-btn">
+                        Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- =============================== -->
+        <!-- ADMIN CARD (Only visible to admin) -->
+        <!-- =============================== -->
+        {% if current_user.role == 'admin' %}
+        <div class="col-md-6">
+            <div class="dash-card shadow-sm border-primary">
+                <div class="dash-card-body">
+                    <h4 class="dash-card-title">
+                        <i class="bi bi-people-fill me-2"></i> Manage Users
+                    </h4>
+                    <p class="dash-card-text">Approve, reject, or manage all registered users.</p>
+                    <a href="{{ url_for('admin.manage_users') }}" class="btn btn-warning text-dark fw-semibold dash-btn">
+                        Go to User Management
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

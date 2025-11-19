@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5 content-wrapper">
+    <h2 class="fw-bold mb-5 posts-title">Applicant Profiles</h2>
+    
+    {% if posts|length == 0 %}
+        <div class="alert alert-info text-center empty-message" role="alert">
+            No applicant profiles found yet. Applicants can create their profile post to get noticed!
+        </div>
+    {% else %}
+        <div class="row g-4">
+            {% for post in posts %}
+            <div class="col-lg-6 col-xl-4 d-flex">
+                <div class="card job-card flex-fill fade-card">
+                    <div class="d-flex align-items-center mb-3">
+                        
+                        {% if post.user.profile_picture %}
+                        <img src="{{ url_for('static', filename='profile_pics/' ~ post.user.profile_picture) }}"
+                             class="rounded-circle me-3" width="50" height="50">
+                        {% else %}
+                        <i class="bi bi-person-circle text-primary me-3" style="font-size: 2.5rem;"></i>
+                        {% endif %}
+
+                        <div>
+                            <h5 class="fw-semibold mb-0 job-card-title">
+                                {{ post.user.first_name }} {{ post.user.last_name }} 
+                            </h5>
+                            <small class="badge bg-primary">{{ post.user.role|upper }}</small>
+                        </div>
+                    </div>
+
+                    <p class="job-meta">
+                        <i class="bi bi-geo-alt-fill me-1 text-muted"></i> 
+                        **Looking For:** {{ post.looking_for }}
+                    </p>
+
+                    <p class="job-meta">
+                        <i class="bi bi-briefcase-fill me-1 text-muted"></i> 
+                        **Experience:** {{ post.experience }}
+                    </p>
+
+                    {% if post.description %}
+                    <p class="job-description">
+                        {{ post.description | truncate(150) }}
+                    </p>
+                    {% endif %}
+
+                    <div class="job-actions mt-auto pt-2 border-top">
+                        
+                        {% if post.resume_file %}
+                        <a href="{{ url_for('jobs.view_applicant_resume', post_id=post.id) }}" 
+                           class="btn btn-sm btn-outline-info flex-grow-1" target="_blank">
+                           <i class="bi bi-file-earmark-pdf me-1"></i> View Resume
+                        </a>
+                        {% endif %}
+
+                        {% if current_user.is_authenticated and current_user.role in ['employer', 'admin'] %}
+                            <a href="{{ url_for('jobs.contact_applicant', user_id=post.user.id) }}" 
+                               class="btn btn-sm btn-success flex-grow-1 btn-glow">
+                                <i class="bi bi-envelope-fill me-1"></i> Contact Applicant
+                            </a>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

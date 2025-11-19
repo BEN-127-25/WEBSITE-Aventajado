@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="hero-section text-center py-5 mb-5">
+    <div class="container">
+        <h1 class="fw-bold display-5 animate__animated animate__fadeInDown">
+            Discover Your Next Career Opportunity
+        </h1>
+        <p class="text-muted fs-5 animate__animated animate__fadeInUp">
+            Explore job openings from trusted employers and talented applicants.
+        </p>
+
+        <a href="#job-list" class="btn btn-primary btn-lg mt-3 shadow-sm px-4 py-2">
+            Browse Posts
+        </a>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="card shadow-sm p-4 filter-card rounded-4">
+
+        <form method="GET" action="{{ url_for('jobs.posts') }}" class="row g-3">
+
+            <div class="col-lg-6 col-md-12">
+                <input type="text"
+                       class="form-control form-control-lg rounded-3"
+                       name="q"
+                       placeholder="Search job title or company..."
+                       value="{{ request.args.get('q', '') }}">
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <select name="category" class="form-select form-select-lg rounded-3">
+                    <option value="" selected>Filter by Category</option>
+                    <option>IT & Software</option>
+                    <option>Engineering</option>
+                    <option>Business</option>
+                    <option>Healthcare</option>
+                </select>
+            </div>
+
+            <div class="col-lg-2 col-md-6 d-grid">
+                <button class="btn btn-primary btn-lg rounded-3">Search</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<div class="container" id="job-list">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Employer Job Posts</h2>
+
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('jobs.create_post') }}"
+               class="btn btn-success btn-lg px-4 rounded-3 shadow-sm">
+                + Create Post
+            </a>
+        {% endif %}
+    </div>
+
+    {% if jobs %}
+    <div class="row g-4">
+        {% for job in jobs %}
+        <div class="col-lg-4 col-md-6">
+
+            <div class="card job-card shadow-sm rounded-4 p-4 h-100 fade-card">
+
+                <div class="job-icon mb-3 text-primary">
+                    <i class="bi bi-briefcase-fill" style="font-size: 2.3rem;"></i>
+                </div>
+
+                <h4 class="fw-bold mb-1">{{ job.title }}</h4>
+
+                {% if job.company %}
+                    <p class="text-muted mb-2">{{ job.company }}</p>
+                {% else %}
+                    <p class="text-muted mb-2">Independent Applicant</p>
+                {% endif %}
+
+                <div class="d-flex align-items-center mb-3">
+
+                    {% if job.user.profile_picture %}
+                        <img src="{{ url_for('static', filename='profile_pics/' ~ job.user.profile_picture) }}"
+                             class="rounded-circle me-2"
+                             width="42" height="42">
+                    {% else %}
+                        <i class="bi bi-person-circle text-primary me-2" style="font-size: 2rem;"></i>
+                    {% endif %}
+
+                    <div>
+                      <a href="{{ url_for('auth.profile', user_id=job.user.id) }}"
+                           class="fw-semibold text-decoration-none text-dark hover-underline">
+                           {{ job.user.username }}
+                      </a>
+                      <br>
+                        <span class="badge bg-secondary text-uppercase">
+                            {{ job.role }}
+                        </span>
+                    </div>
+                </div>
+
+                <span class="badge bg-info text-dark mb-2">
+                    {{ job.status|capitalize }}
+                </span>
+
+                {% if job.experience_required %}
+                <span class="badge bg-primary-subtle text-primary mb-3">
+                    {{ job.experience_required }}
+                </span>
+                {% endif %}
+
+                <p class="text-muted small mb-4">
+                    {{ job.description[:140] }}...
+                </p>
+
+                <a href="{{ url_for('jobs.view_post', job_id=job.id) }}"
+                   class="btn btn-outline-primary w-100 fw-semibold rounded-3">
+                    View Details
+                </a>
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+    <div class="text-center text-muted py-5">
+        <h4>No employer job posts available yet.</h4>
+    </div>
+    {% endif %}
+
+    <h2 class="fw-bold mt-5 mb-4 border-top pt-4">Applicant Profiles</h2>
+
+    {% if applicant_posts %}
+    <div class="row g-4">
+        {% for post in applicant_posts %}
+        <div class="col-lg-4 col-md-6">
+
+            <div class="card job-card shadow-sm rounded-4 p-4 h-100 fade-card">
+
+                <div class="job-icon mb-3 text-info">
+                    <i class="bi bi-person-lines-fill" style="font-size: 2.3rem;"></i>
+                </div>
+                
+                <h4 class="fw-bold mb-1">{{ post.user.first_name }} {{ post.user.last_name }}</h4>
+
+                <p class="text-muted mb-2">Looking for: **{{ post.looking_for }}**</p>
+                
+                <div class="d-flex align-items-center mb-3">
+                    {% if post.user.profile_picture %}
+                        <img src="{{ url_for('static', filename='profile_pics/' ~ post.user.profile_picture) }}"
+                             class="rounded-circle me-2"
+                             width="42" height="42">
+                    {% else %}
+                        <i class="bi bi-person-circle text-primary me-2" style="font-size: 2rem;"></i>
+                    {% endif %}
+
+                    <div>
+                      <a href="{{ url_for('auth.profile', user_id=post.user.id) }}"
+                           class="fw-semibold text-decoration-none text-dark hover-underline">
+                           {{ post.user.username }}
+                      </a>
+                      <br>
+                        <span class="badge bg-secondary text-uppercase">
+                            {{ post.user.role }}
+                        </span>
+                    </div>
+                </div>
+
+                <span class="badge bg-primary-subtle text-primary mb-3">
+                    {{ post.experience }}
+                </span>
+
+                {% if post.description %}
+                <p class="text-muted small mb-4">
+                    {{ post.description[:140] }}...
+                </p>
+                {% endif %}
+
+                <div class="d-flex gap-2 mt-auto">
+                    <a href="{{ url_for('jobs.view_applicant_resume', post_id=post.id) }}"
+                       class="btn btn-outline-info w-50 fw-semibold rounded-3"
+                       target="_blank">
+                        View Resume
+                    </a>
+                    
+                    {% if current_user.is_authenticated and current_user.role in ['employer', 'admin'] %}
+                        <a href="{{ url_for('jobs.contact_applicant', user_id=post.user.id) }}" 
+                           class="btn btn-success w-50 fw-semibold rounded-3">
+                            <i class="bi bi-envelope-fill me-1"></i> Contact
+                        </a>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+    <div class="text-center text-muted py-5">
+        <h4>No applicant profiles available yet.</h4>
+    </div>
+    {% endif %}
+
+</div>
+<hr class="my-5">
+<section class="testimonials py-5 mt-5 bg-white rounded-4">
+    <div class="container text-center">
+
+        <h2 class="fw-bold mb-4">What Users Say About HireHub</h2>
+
+        <div class="row g-4">
+
+            {% set testimonial_data = [
+                ("HireHub helped me land my dream job within a week!", "Maria Santos"),
+                ("Posting jobs is fast and easy. Great platform.", "John Reyes"),
+                ("Clean UI and smooth user experience!", "Anna Cruz")
+            ] %}
+
+            {% for text, author in testimonial_data %}
+            <div class="col-lg-4 col-md-6">
+                <div class="card p-4 shadow-sm rounded-4 testimonial-card">
+                    <p class="mb-3">{{ text }}</p>
+                    <h6 class="fw-bold">– {{ author }}</h6>
+                </div>
+            </div>
+            {% endfor %}
+
+        </div>
+
+    </div>
+</section>
+
+<div class="mb-5"></div>
+
+{% endblock %}

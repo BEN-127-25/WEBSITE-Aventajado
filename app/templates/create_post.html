@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="card p-4 shadow-sm">
+        <h2 class="fw-bold mb-4 text-center">Create Post</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+            {{ form.hidden_tag() }}
+
+            <!-- Job Title -->
+            <div class="mb-3">
+                {{ form.job_title.label(class="form-label fw-semibold") }}
+                {{ form.job_title(class="form-control") }}
+                {% for error in form.job_title.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- 🔥 DESCRIPTION FIELD (common to both applicant & employer) -->
+            <div class="mb-3">
+                {{ form.description.label(class="form-label fw-semibold") }}
+                {{ form.description(class="form-control", rows="4") }}
+                {% for error in form.description.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            {% if current_user.role == "applicant" %}
+
+            <!-- Applicant Experience -->
+            <div class="mb-3">
+                {{ form.experience.label(class="form-label fw-semibold") }}
+                {{ form.experience(class="form-control", rows="4") }}
+                {% for error in form.experience.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Resume Upload -->
+            {% if form.resume_file %}
+            <div class="mb-3">
+                {{ form.resume_file.label(class="form-label fw-semibold") }}
+                {{ form.resume_file(class="form-control") }}
+                {% for error in form.resume_file.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% elif current_user.role == "employer" %}
+
+            <!-- Company Name -->
+            <div class="mb-3">
+                {{ form.company_name.label(class="form-label fw-semibold") }}
+                {{ form.company_name(class="form-control") }}
+                {% for error in form.company_name.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <!-- Required Experience -->
+            <div class="mb-3">
+                {{ form.experience.label(class="form-label fw-semibold") }}
+                {{ form.experience(class="form-control", rows="4") }}
+                {% for error in form.experience.errors %}
+                    <div class="text-danger small">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary w-100 mt-3">
+                {{ form.submit.label.text }}
+            </button>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}
