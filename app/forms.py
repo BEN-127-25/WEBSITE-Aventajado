@@ -72,23 +72,26 @@ class LoginForm(FlaskForm):
 # PROFILE FORM
 # ================================
 class ProfileForm(FlaskForm):
-    username = StringField("Username", validators=[DataRequired()])
-    email = StringField("Email", validators=[Optional(), Email()])
-    
-    # Optional new password
-    password = PasswordField("New Password (optional)", validators=[Optional()])
+    username = StringField("Username", validators=[Optional(), Length(min=3, max=80)])
+    email = StringField("Email", validators=[Optional(), Email(), Length(max=150)])
+
+    first_name = StringField("First Name", validators=[Optional(), Length(max=50)])
+    last_name = StringField("Last Name", validators=[Optional(), Length(max=50)])
+
+    password = PasswordField("New Password", validators=[Optional(), Length(min=6)])
 
     profile_picture = FileField(
-        "Upload Profile Picture",
-        validators=[FileAllowed(["jpg", "jpeg", "png", "gif"])]
+        "Profile Picture",
+        validators=[Optional(), FileAllowed(["jpg", "jpeg", "png"])]
     )
 
+    # 🔥 Resume field used by your route
     resume = FileField(
-        "Upload Resume",
-        validators=[FileAllowed(["pdf", "doc", "docx"])]
+        "Resume (PDF)",
+        validators=[Optional(), FileAllowed(["pdf"])]
     )
 
-    submit = SubmitField("Save Changes")
+    submit = SubmitField("Update Profile")
 
 
 # ================================
@@ -125,8 +128,14 @@ class EmployerPostForm(FlaskForm):
     job_title = StringField("Job Title", validators=[DataRequired()])
     company_name = StringField("Company Name", validators=[DataRequired()])
     description = TextAreaField("Job Description", validators=[DataRequired()])
-    experience = TextAreaField("Required Experience", validators=[Optional()])
+
+    experience = StringField("Experience Required", validators=[Optional()])
+
+    # 🔥 REQUIRED — your route expects this!
+    degree = StringField("Degree Required", validators=[Optional()])
+
     submit = SubmitField("Post Job")
+
 
 
 # ================================

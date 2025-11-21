@@ -1,15 +1,16 @@
 import os
 import secrets
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
-from app.forms import RegisterForm, LoginForm, ProfileForm
-from app import db
-from app.models import User
+from ..forms import RegisterForm, LoginForm, ProfileForm
+from ..models import User
+from .. import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 from app.utils import save_resume
 from werkzeug.utils import secure_filename
 
 auth_bp = Blueprint('auth', __name__)
+
 
 # =====================================================
 # HOME / LANDING
@@ -22,15 +23,14 @@ def index():
         if current_user.role == 'admin':
             return redirect(url_for('admin.admin_users'))
 
-        # APPLICANT / EMPLOYEE / EMPLOYER / RECRUITER
-        # All authenticated users are redirected to the job posts page.
+        # ALL OTHER USERS → job posts page
         return redirect(url_for('jobs.posts'))
 
     return render_template('home.html')
 
 
 # =====================================================
-# ABOUT US  (visible only when logged in)
+# ABOUT US
 # =====================================================
 @auth_bp.route('/about')
 @login_required
@@ -39,18 +39,14 @@ def about():
 
 
 # =====================================================
-# REGISTER (SECURED + ADMIN CAN CREATE ACCOUNTS)
+# REGISTER (FULLY FIXED VERSION — NO DUPLICATES)
 # =====================================================
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
 
-    # If a normal user tries to select admin → block it
-    if form.role.data == "admin" and (
-        not current_user.is_authenticated or not current_user.is_admin()
-    ):
-        flash("You are not allowed to register an admin account.", "danger")
-        return redirect(url_for("auth.register"))
+    # Check if an admin already exists
+    admin_exists = User.query.filter_by(role="admin").first() is not None
 
     if form.validate_on_submit():
 
@@ -59,12 +55,29 @@ def register():
         pw_hash = generate_password_hash(form.password.data)
         role = form.role.data
 
-        # New user is ALWAYS unapproved at first (except admin creation by admin)
-        status = "pending"
+        # -----------------------------------------------
+        # BLOCK unauthorized creation of admin accounts
+        # -----------------------------------------------
+        if role == "admin":
+            # FIRST ADMIN EVER → allowed
+            if not admin_exists:
+                status = "approved"
 
-        # If admin is creating another admin → auto approve
-        if current_user.is_authenticated and current_user.is_admin():
-            status = "approved"
+            # Other admins → only existing admin may create more
+            elif not current_user.is_authenticated or not current_user.is_admin():
+                flash("Only an admin can create another admin account.", "danger")
+                return redirect(url_for("auth.register"))
+            else:
+                status = "approved"   # admin creates admin
+
+        else:
+            # For ALL non-admin roles
+            status = "pending"
+
+        # Admin creating user → auto-approved users?
+        if current_user.is_authenticated and current_user.is_admin() and role != "admin":
+            # Keep customers/employees/employers pending
+            status = "pending"
 
         user = User(
             username=username,
@@ -83,71 +96,51 @@ def register():
             flash('Registration failed: ' + str(e), 'danger')
             return redirect(url_for('auth.register'))
 
-        # ADMIN creating accounts → no need for approval message
+        # Admin creating user → redirect to admin panel
         if current_user.is_authenticated and current_user.is_admin():
             flash(f"User '{username}' registered successfully.", "success")
             return redirect(url_for('admin.admin_users'))
 
-        # Normal registrants → pending approval message
-        flash('Your account has been created and is pending admin approval.', 'warning')
-        return redirect(url_for('auth.login'))
+        # Normal users → pending approval
+        if status == "pending":
+            flash("Your account has been created and is pending admin approval.", "warning")
+        else:
+            flash("Admin account created successfully.", "success")
 
-    # Debug: Show validation errors if form fails
-    elif request.method == 'POST':
-        print("Form validation errors:", form.errors)
+        return redirect(url_for('auth.login'))
 
     return render_template('register.html', form=form)
 
-# =====================================================
-# LOGIN (UPDATED for Admin Approval Check)
-# =====================================================
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
 
     if form.validate_on_submit():
 
-        login_input = form.username.data.strip()
-        password = form.password.data
+        # User can type username OR email
+        input_value = form.username.data.strip()
 
-        # Allow username or email login
-        if '@' in login_input:
-            user = User.query.filter_by(email=login_input).first()
-        else:
-            user = User.query.filter_by(username=login_input).first()
+        user = User.query.filter(
+            (User.username == input_value) | (User.email == input_value)
+        ).first()
 
-        # Invalid credentials
-        if not user or not check_password_hash(user.password_hash, password):
-            flash('Invalid username/email or password.', 'danger')
-            return redirect(url_for('auth.login'))
-        
-        # CRITICAL CHECK: Block login if not approved
-        # Using getattr with a default of True handles cases where 'is_approved' might not exist (e.g., for old admin accounts)
-        if not getattr(user, 'is_approved', True): 
-            flash('Your account is pending admin approval. Please wait for an administrator to review your registration.', 'danger')
-            return redirect(url_for('auth.login')) 
-
-        # Check if banned
-        if getattr(user, 'banned', False):
-            flash('Your account is banned. Contact admin.', 'danger')
+        if not user or not check_password_hash(user.password_hash, form.password.data):
+            flash("Invalid login credentials.", "danger")
             return redirect(url_for('auth.login'))
 
-        # Login
+        if user.status != "approved":
+            flash("Your account is pending approval.", "warning")
+            return redirect(url_for('auth.login'))
         login_user(user)
-        flash('Logged in successfully.', 'success')
+        flash("Welcome back!", "success")
 
-        next_page = request.args.get('next')
+        if user.role == "admin":
+            return redirect(url_for("admin.admin_users"))
 
-        # Redirect based on role
-        if user.role == 'admin':
-            return redirect(next_page or url_for('admin.admin_users'))
+        return redirect(url_for("jobs.posts"))
 
-        elif user.role in ('employer', 'employee', 'recruiter', 'applicant'):
-            return redirect(next_page or url_for('jobs.posts'))
-
-        return redirect(next_page or url_for('auth.index'))
-
-    return render_template('login.html', form=form)
+    return render_template("login.html", form=form)
 
 
 # =====================================================
@@ -197,16 +190,19 @@ def profile():
             current_user.email = form.email.data
             updated = True
 
-        # Change Password
+        # Password
         if form.password.data:
             current_user.password_hash = generate_password_hash(form.password.data)
             updated = True
 
         # Profile Picture
         if form.profile_picture.data:
-
             if current_user.profile_picture:
-                old_pic = os.path.join(current_app.root_path, 'static/profile_pics', current_user.profile_picture)
+                old_pic = os.path.join(
+                    current_app.root_path, 
+                    'static/profile_pics', 
+                    current_user.profile_picture
+                )
                 if os.path.exists(old_pic):
                     os.remove(old_pic)
 
@@ -216,33 +212,34 @@ def profile():
 
         # Resume Upload
         if form.resume.data:
-
             if current_user.resume_filename:
-                old_resume = os.path.join(current_app.root_path, 'static/uploads', current_user.resume_filename)
+                old_resume = os.path.join(
+                    current_app.root_path, 
+                    'static/uploads', 
+                    current_user.resume_filename
+                )
                 if os.path.exists(old_resume):
                     os.remove(old_resume)
 
             new_resume = save_resume(form.resume.data)
             current_user.resume_filename = new_resume
             updated = True
-            
+
         # First Name
         if form.first_name.data and form.first_name.data != current_user.first_name:
             current_user.first_name = form.first_name.data
             updated = True
-            
+
         # Last Name
         if form.last_name.data and form.last_name.data != current_user.last_name:
             current_user.last_name = form.last_name.data
             updated = True
 
-
-        # Apply changes
         if updated:
             db.session.commit()
-            flash("✅ Profile updated successfully!", "success")
+            flash("Profile updated successfully!", "success")
         else:
-            flash("⚠️ No changes detected.", "info")
+            flash("No changes detected.", "info")
 
         return redirect(url_for('auth.profile'))
 
